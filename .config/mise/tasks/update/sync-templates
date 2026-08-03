@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #MISE description="直近のテンプレートリポジトリ から最新の共通テンプレート・設定資産を同期"
-#MISE run="bash .config/mise/tasks/update/sync-templates \"$@\""
 
 set -euo pipefail
 
