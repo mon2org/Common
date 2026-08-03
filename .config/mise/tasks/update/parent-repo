@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="直系の親テンプレートリポジトリを自動検出して出力します"
-#MISE run="bash .config/mise/tasks/update/parent-repo \"$@\""
+#MISE description="直系の親テンプレートリポジトリを自動検出して出力"
 
 set -euo pipefail
 
