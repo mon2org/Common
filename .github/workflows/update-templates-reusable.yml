@@ -41,13 +41,13 @@ jobs:
       pull-requests: write
 
     steps:
-      # ローカル Action を利用するため、まずリポジトリ本体を取得
+      # 1. ローカル Action / wrap ラッパーを利用するため、まずターゲットリポジトリ本体を取得
       - name: リポジトリのチェックアウト
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.token || github.token }}
 
-      # トークンの優先順位設定（指定があれば secrets.token、なければ GITHUB_TOKEN）
+      # 2. トークンの優先順位設定（指定があれば secrets.token、なければ GITHUB_TOKEN）
       - name: Token の確定
         id: token
         shell: bash
@@ -58,7 +58,11 @@ jobs:
           fi
           echo "value=$TOKEN" >> $GITHUB_OUTPUT
 
-      # 1. 関連リポジトリの一括取得（自リポジトリ、親テンプレート、Common）
+      # 3. mise のセットアップ (後続の core/checkout-repos 内で mise タスクを叩くため先行実行)
+      - name: mise のセットアップ
+        uses: ./.github/actions/wrap/mise
+
+      # 4. 関連リポジトリの一括取得（自リポジトリ、親テンプレート、Common）
       - name: 関連リポジトリのチェックアウト
         uses: ./.github/actions/core/checkout-repos
         with:
@@ -66,11 +70,11 @@ jobs:
           common-repository: ${{ inputs.common-repository }}
           token: ${{ steps.token.outputs.value }}
 
-      # 2. mise 環境のセットアップとテンプレート同期実行（終了後のクリーンアップ含む）
+      # 5. テンプレートの同期実行（クリーンアップ処理含む）
       - name: テンプレートの同期
         uses: ./.github/actions/update/sync-templates
 
-      # 3. 変更差分がある場合に自動で PR を作成
+      # 6. 変更差分がある場合に自動で PR を作成
       - name: プルリクエストの作成
         uses: ./.github/actions/wrap/create-pull-request
         with:
