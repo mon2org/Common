@@ -1,0 +1,33 @@
+name: 課題・タスク起票 (汎用)
+description: 汎用的な課題・タスクの起票用テンプレート。
+title: "[Task]: "
+labels: ["task"]
+
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: 概要・背景
+      description: 解決したい課題や取り組む内容を簡潔に記述してください。
+      placeholder: "〇〇の更新を行い、△△の処理を自動化する。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: 完了条件
+      description: この Issue（サブイシュー群）が完了したとみなす条件を記述してください。
+      placeholder: |
+        - [ ] 〇〇が正常に動作すること
+        - [ ] ドキュメントが更新されていること
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: 補足・参考資料
+      description: 関連するリンク、メモなどがあれば記述してください。
+    validations:
+      required: false

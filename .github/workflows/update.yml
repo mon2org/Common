@@ -1,0 +1,18 @@
+name: リポジトリの更新処理
+description: 親リポジトリの更新を取り込むためのワークフロー。
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # 毎週月曜日 00:00 (UTC) に自動実行
+  workflow_dispatch:     # 手動実行ボタン
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  call-common-update:
+    name: 共通テンプレートの同期実行
+    if: github.repository != 'mon2org/Boilerplate'
+    uses: mon2org/Common/.github/workflows/update.yml@main
+    secrets: inherit

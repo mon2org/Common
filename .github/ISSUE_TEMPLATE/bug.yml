@@ -1,0 +1,60 @@
+name: バグ報告
+description: 不具合やエラーが発生した場合の報告用テンプレート。
+title: "fix: "
+labels: ["bug"]
+
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: 発生している問題や現象を簡潔に記述してください。
+      placeholder: "〇〇を実行した際、△△エラーが発生して処理が中断する。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順・発生条件
+      description: 問題が発生する手順や発生環境（OS等）を記述してください。
+      placeholder: |
+        1. `mise run xxx` を実行
+        2. 〇〇画面でボタンを押下
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待値
+      description: 本来どう動くべきか（期待される挙動）を記述してください。
+      placeholder: "エラーが出ずに〇〇の処理が正常完了すること。"
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動き
+      description: 実際に発生した挙動や結果を記述してください。
+      placeholder: "エラーコード 127 が返り処理が中断する。"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・スクリーンショット
+      description: エラーログやスタックトレース、キャプチャ画像があれば貼付してください。
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: その他
+      description: 補足情報や関連するリンクなどがあれば記述してください。
+    validations:
+      required: false
