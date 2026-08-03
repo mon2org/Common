@@ -1,0 +1,46 @@
+name: Create Pull Request Wrapper
+description: peter-evans/create-pull-request のバージョン固定・一本化ラッパー。
+
+inputs:
+  token:
+    description: 'GitHub Token'
+    required: false
+    default: ${{ github.token }}
+  commit-message:
+    description: 'コミットメッセージ'
+    required: false
+    default: 'chore: 自動更新'
+  title:
+    description: 'PR のタイトル'
+    required: false
+    default: 'chore: 自動更新'
+  body:
+    description: 'PR の本文'
+    required: false
+    default: ''
+  branch:
+    description: '作成するブランチ名'
+    required: false
+    default: 'chore/auto-update'
+  delete-branch:
+    description: 'マージ後にブランチを削除するか'
+    required: false
+    default: 'true'
+  labels:
+    description: '付与するラベル (改行区切り)'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: PR 作成の実行
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ inputs.token }}
+        commit-message: ${{ inputs.commit-message }}
+        title: ${{ inputs.title }}
+        body: ${{ inputs.body }}
+        branch: ${{ inputs.branch }}
+        delete-branch: ${{ inputs.delete-branch }}
+        labels: ${{ inputs.labels }}

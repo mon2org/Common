@@ -1,0 +1,21 @@
+name: Mise Wrapper
+description: jdx/mise-action のバージョン固定・一本化ラッパー。
+
+inputs:
+  install:
+    description: 'mise.toml / .tool-versions に基づくツール自動インストールを行うか'
+    required: false
+    default: 'true'
+  cache:
+    description: 'mise のキャッシュを有効化するか'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: mise のセットアップ実行
+      uses: jdx/mise-action@v2
+      with:
+        install: ${{ inputs.install }}
+        cache: ${{ inputs.cache }}
