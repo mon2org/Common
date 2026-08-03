@@ -41,6 +41,10 @@ jobs:
       pull-requests: write
 
     steps:
+      # ローカル Action を利用するため、まずリポジトリ本体を取得
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+
       # トークンの優先順位設定（指定があれば secrets.token、なければ GITHUB_TOKEN）
       - name: Token の確定
         id: token
