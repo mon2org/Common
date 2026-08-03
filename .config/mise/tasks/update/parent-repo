@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#MISE description="直系の親テンプレートリポジトリを自動検出して出力します"
+#MISE run="bash .config/mise/tasks/update/parent-repo \"$@\""
+
+set -euo pipefail
+
+INPUT_REPO="${1:-AUTO}"
+DEFAULT_REPO="${2:-mon2org/Boilerplate}"
+
+# 1. 明示的なリポジトリ名が指定されている（AUTO 以外）場合はそのまま出力
+if [ "$INPUT_REPO" != "AUTO" ] && [ -n "$INPUT_REPO" ]; then
+  echo "$INPUT_REPO"
+  exit 0
+fi
+
+# 2. 対象リポジトリ名 (owner/repo) の取得
+# CI（GITHUB_REPOSITORY）または ローカル（git remote）から動的に判定
+TARGET_REPO="${GITHUB_REPOSITORY:-}"
+if [ -z "$TARGET_REPO" ]; then
+  TARGET_REPO=$(git config --get remote.origin.url 2>/dev/null | sed -E 's/.*[:\/]([^\/]+\/[^\/]+)\.git$/\1/' | sed 's/\.git$//' || true)
+fi
+
+# 3. gh CLI による API 問い合わせ
+PARENT_REPO=""
+if [ -n "$TARGET_REPO" ] && command -v gh >/dev/null 2>&1; then
+  PARENT_REPO=$(gh api "repos/${TARGET_REPO}" --jq '.template_repository.full_name' 2>/dev/null || true)
+fi
+
+# 4. 判定結果の出力（取得不可時はデフォルトにフォールバック）
+if [ -n "$PARENT_REPO" ] && [ "$PARENT_REPO" != "null" ]; then
+  echo "$PARENT_REPO"
+else
+  echo "$DEFAULT_REPO"
+fi

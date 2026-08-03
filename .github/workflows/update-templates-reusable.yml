@@ -1,0 +1,79 @@
+name: Reusable Sync Templates Workflow
+
+on:
+  workflow_call:
+    inputs:
+      boilerplate-repository:
+        description: '取得対象の Boilerplate リポジトリ (AUTO の場合は自動判別)'
+        type: string
+        required: false
+        default: 'AUTO'
+      common-repository:
+        description: '取得対象の Common リポジトリ'
+        type: string
+        required: false
+        default: 'mon2org/Common'
+      pr-branch:
+        description: '作成する PR のブランチ名'
+        type: string
+        required: false
+        default: 'chore/sync-templates'
+      pr-title:
+        description: '作成する PR のタイトル'
+        type: string
+        required: false
+        default: 'chore: テンプレートの最新化'
+      pr-commit-message:
+        description: 'コミットメッセージ'
+        type: string
+        required: false
+        default: 'chore: テンプレートの最新化'
+    secrets:
+      token:
+        description: 'リポジトリ取得および PR 作成用 GitHub Token'
+        required: false
+
+jobs:
+  sync-templates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      # トークンの優先順位設定（指定があれば secrets.token、なければ GITHUB_TOKEN）
+      - name: Token の確定
+        id: token
+        shell: bash
+        run: |
+          TOKEN="${{ secrets.token }}"
+          if [ -z "$TOKEN" ]; then
+            TOKEN="${{ github.token }}"
+          fi
+          echo "value=$TOKEN" >> $GITHUB_OUTPUT
+
+      # 1. 関連リポジトリの一括取得（自リポジトリ、親テンプレート、Common）
+      - name: 関連リポジトリのチェックアウト
+        uses: ./.github/actions/core/checkout-repos
+        with:
+          boilerplate-repository: ${{ inputs.boilerplate-repository }}
+          common-repository: ${{ inputs.common-repository }}
+          token: ${{ steps.token.outputs.value }}
+
+      # 2. mise 環境のセットアップとテンプレート同期実行（終了後のクリーンアップ含む）
+      - name: テンプレートの同期
+        uses: ./.github/actions/update/sync-templates
+
+      # 3. 変更差分がある場合に自動で PR を作成
+      - name: プルリクエストの作成
+        uses: ./.github/actions/wrap/create-pull-request
+        with:
+          token: ${{ steps.token.outputs.value }}
+          commit-message: ${{ inputs.pr-commit-message }}
+          title: ${{ inputs.pr-title }}
+          body: |
+            ## 🤖 共通テンプレート自動同期
+
+            親テンプレートおよび Common リポジトリから最新の設定資産を同期しました。
+            変更内容を確認の上、マージを行ってください。
+          branch: ${{ inputs.pr-branch }}

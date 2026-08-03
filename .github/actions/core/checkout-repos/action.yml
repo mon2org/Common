@@ -1,0 +1,60 @@
+name: Checkout Repositories
+description: テンプレート同期処理に必要な関連リポジトリ（自リポジトリ、親テンプレート、Common）を一括取得します。
+
+inputs:
+  boilerplate-repository:
+    description: '取得対象の Boilerplate リポジトリ (未指定/AUTO の場合は元になった親テンプレートを自動判別)'
+    required: false
+    default: 'AUTO'
+  boilerplate-dir:
+    description: 'Boilerplate の配置先ディレクトリ'
+    required: false
+    default: '.temp-boilerplate'
+  common-repository:
+    description: '取得対象の Common リポジトリ'
+    required: false
+    default: 'mon2org/Common'
+  common-dir:
+    description: 'Common の配置先ディレクトリ'
+    required: false
+    default: '.temp-common'
+  token:
+    description: 'リポジトリ取得に使用する GitHub Token'
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    # 1. 呼び出し元（ターゲット）リポジトリの取得
+    - name: Target Repository のチェックアウト
+      uses: ./.github/actions/wrap/checkout
+      with:
+        token: ${{ inputs.token }}
+
+    # 2. 親テンプレートリポジトリの自動判別ステップ
+# 2. 親テンプレートリポジトリの判別（mise タスク化）
+    - name: 親テンプレートリポジトリの判別
+      id: detect-parent
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        REPO=$(mise run update:parent-repo "${{ inputs.boilerplate-repository }}" "mon2org/Boilerplate")
+        echo "repo=$REPO" >> $GITHUB_OUTPUT
+
+    # 3. 判別した親テンプレート（Boilerplate）リポジトリの取得
+    - name: Boilerplate Repository のチェックアウト
+      uses: ./.github/actions/wrap/checkout
+      with:
+        repository: ${{ steps.detect-parent.outputs.repo }}
+        path: ${{ inputs.boilerplate-dir }}
+        token: ${{ inputs.token }}
+
+    # 4. Common リポジトリの取得
+    - name: Common Repository のチェックアウト
+      uses: ./.github/actions/wrap/checkout
+      with:
+        repository: ${{ inputs.common-repository }}
+        path: ${{ inputs.common-dir }}
+        token: ${{ inputs.token }}

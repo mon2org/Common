@@ -1,0 +1,28 @@
+name: Checkout Wrapper
+description: actions/checkout のバージョン固定・一本化ラッパー。
+
+inputs:
+  repository:
+    description: '取得対象のリポジトリ (例: owner/repo)'
+    required: false
+  ref:
+    description: 'チェックアウトするブランチ、タグ、または SHA'
+    required: false
+  path:
+    description: '配置先の相対パス'
+    required: false
+  token:
+    description: 'リポジトリ取得に使用する GitHub Token'
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout の実行
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        path: ${{ inputs.path }}
+        token: ${{ inputs.token }}

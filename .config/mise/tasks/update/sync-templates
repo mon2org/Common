@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+#MISE description="直近のテンプレートリポジトリ から最新の共通テンプレート・設定資産を同期"
+#MISE run="bash .config/mise/tasks/update/sync-templates \"$@\""
+
+set -euo pipefail
+
+# -----------------------------------------------------------------------------
+# 1. 引数と初期設定
+# -----------------------------------------------------------------------------
+BOILERPLATE_DIR="${1:-.temp-boilerplate}"
+COMMON_DIR="${2:-.temp-common}"
+DEST_DIR="."
+
+echo "🔄 テンプレート同期処理を開始します..."
+
+# -----------------------------------------------------------------------------
+# 2. rsync ガード処理（未インストール時の検出と案内）
+# -----------------------------------------------------------------------------
+if ! command -v rsync >/dev/null 2>&1; then
+  echo "❌ Error: 'rsync' コマンドが見つかりません。" >&2
+  echo "" >&2
+  echo "このタスクを実行するには rsync が必要です。" >&2
+  echo "お使いの環境に合わせて以下のコマンドでインストールしてください:" >&2
+  echo "  ・macOS (Homebrew)  : brew install rsync" >&2
+  echo "  ・Ubuntu / Debian    : sudo apt-get update && sudo apt-get install -y rsync" >&2
+  echo "  ・Alpine Linux       : apk add rsync" >&2
+  echo "  ・Windows (Git Bash) : Git for Windows SDK または WSL2 環境でご使用ください" >&2
+  exit 1
+fi
+
+# -----------------------------------------------------------------------------
+# 3. 同期元ディレクトリの存在チェック
+# -----------------------------------------------------------------------------
+if [ ! -d "$BOILERPLATE_DIR" ]; then
+  echo "❌ Error: 同期元ディレクトリ '$BOILERPLATE_DIR' が見つかりません。" >&2
+  echo "   あらかじめ '.github/actions/core/checkout-repos' 等でチェックアウトしてください。" >&2
+  exit 1
+fi
+
+# -----------------------------------------------------------------------------
+# 4. 除外ルールファイル (.update-ignore) の自動判別
+# -----------------------------------------------------------------------------
+IGNORE_FILE=""
+
+if [ -f ".config/.update-ignore" ]; then
+  IGNORE_FILE=".config/.update-ignore"
+  echo "ℹ️  除外ルール: 派生リポジトリ側の .config/.update-ignore を使用します"
+elif [ -f ".update-ignore" ]; then
+  IGNORE_FILE=".update-ignore"
+  echo "ℹ️  除外ルール: ルート直下の .update-ignore を使用します"
+elif [ -f "${COMMON_DIR}/.config/.update-ignore" ]; then
+  IGNORE_FILE="${COMMON_DIR}/.config/.update-ignore"
+  echo "ℹ️  除外ルール: Common デフォルトの .config/.update-ignore を使用します"
+else
+  echo "⚠️  .update-ignore が見つからないため、基本設定のみで同期します"
+fi
+
+# -----------------------------------------------------------------------------
+# 5. rsync コマンドの構築と実行
+# -----------------------------------------------------------------------------
+RSYNC_OPTS=(-av --prune-empty-dirs)
+
+# 基本的なシステム除外ルール
+RSYNC_OPTS+=(
+  --exclude=".git/"
+  --exclude=".temp-*"
+  --exclude="node_modules/"
+)
+
+# .update-ignore の適用
+if [ -n "$IGNORE_FILE" ]; then
+  RSYNC_OPTS+=(--exclude-from="$IGNORE_FILE")
+fi
+
+echo "🚀 rsync による同期を実行中..."
+rsync "${RSYNC_OPTS[@]}" "${BOILERPLATE_DIR}/" "${DEST_DIR}/"
+
+echo "✨ テンプレート同期が正常に完了しました！"

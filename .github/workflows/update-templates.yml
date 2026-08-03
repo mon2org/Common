@@ -1,0 +1,21 @@
+name: テンプレートの最新化
+
+on:
+  # 毎週月曜 午前9:00 (JST) に定期実行 (UTC 0:00)
+  schedule:
+    - cron: '0 0 * * 1'
+  # GitHub Actions 画面から手動で実行可能
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    # 同一リポジトリ内（テスト時など）で呼び出す場合
+    uses: ./.github/workflows/update-templates-reusable.yml
+    # 派生リポジトリから Common のワークフローを呼び出す場合はこちらを使用:
+    # uses: mon2org/Common/.github/workflows/update-templates-reusable.yml@main
+    secrets:
+      token: ${{ secrets.GH_PAT }}
