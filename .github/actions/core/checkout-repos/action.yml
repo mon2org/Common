@@ -1,0 +1,49 @@
+name: Checkout Repositories
+description: テンプレート同期処理に必要な関連リポジトリ（自リポジトリ、Boilerplate、Common）を一括取得。
+
+inputs:
+  boilerplate-repository:
+    description: '取得対象の Boilerplate リポジトリ'
+    required: false
+    default: 'mon2org/Boilerplate'
+  boilerplate-dir:
+    description: 'Boilerplate の配置先ディレクトリ'
+    required: false
+    default: '.temp-boilerplate'
+  common-repository:
+    description: '取得対象の Common リポジトリ'
+    required: false
+    default: 'mon2org/Common'
+  common-dir:
+    description: 'Common の配置先ディレクトリ'
+    required: false
+    default: '.temp-common'
+  token:
+    description: 'リポジトリ取得に使用する GitHub Token'
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    # 1. 呼び出し元（ターゲット）リポジトリの取得
+    - name: Target Repository のチェックアウト
+      uses: ./.github/actions/wrap/checkout
+      with:
+        token: ${{ inputs.token }}
+
+    # 2. Boilerplate リポジトリの取得
+    - name: Boilerplate Repository のチェックアウト
+      uses: ./.github/actions/wrap/checkout
+      with:
+        repository: ${{ inputs.boilerplate-repository }}
+        path: ${{ inputs.boilerplate-dir }}
+        token: ${{ inputs.token }}
+
+    # 3. Common リポジトリの取得
+    - name: Common Repository のチェックアウト
+      uses: ./.github/actions/wrap/checkout
+      with:
+        repository: ${{ inputs.common-repository }}
+        path: ${{ inputs.common-dir }}
+        token: ${{ inputs.token }}
