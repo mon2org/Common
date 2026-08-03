@@ -1,0 +1,44 @@
+name: Sync Templates Action
+description: wrap/mise をセットアップ後、mise タスク経由で最新のテンプレートを同期。
+
+inputs:
+  boilerplate-dir:
+    description: '同期元となる Boilerplate の一時ディレクトリ'
+    required: false
+    default: '.temp-boilerplate'
+  common-dir:
+    description: 'Common の一時ディレクトリ'
+    required: false
+    default: '.temp-common'
+  install:
+    description: 'mise.toml に基づくツールの自動インストールを行うか'
+    required: false
+    default: 'true'
+  cache:
+    description: 'mise のキャッシュを有効化するか'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    # 1. wrap/mise ラッパーを使用した mise 環境の構築
+    - name: mise のセットアップ
+      uses: ./.github/actions/wrap/mise
+      with:
+        install: ${{ inputs.install }}
+        cache: ${{ inputs.cache }}
+
+    # 2. mise タスクによるテンプレート同期実行
+    - name: テンプレート同期の実行
+      shell: bash
+      run: |
+        mise run update:sync-templates "${{ inputs.boilerplate-dir }}" "${{ inputs.common-dir }}"
+
+    # 3. 後処理（一時ディレクトリのクリーンアップ）
+    # ※ 同期中にエラーが発生した場合でも確実に削除するため always() を指定
+    - name: 一時ディレクトリのクリーンアップ
+      if: always()
+      shell: bash
+      run: |
+        rm -rf "${{ inputs.boilerplate-dir }}" "${{ inputs.common-dir }}"
