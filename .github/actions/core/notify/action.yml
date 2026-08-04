@@ -1,0 +1,15 @@
+name: 'Core Notify'
+description: 'ワークフロー完全失敗時の通知（重複防止機能付きIssue作成）'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Notify Script
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        WORKFLOW_NAME: ${{ github.workflow }}
+        REPOSITORY: ${{ github.repository }}
+        RUN_ID: ${{ github.run_id }}
+        SERVER_URL: ${{ github.server_url }}
+      run: bash "${{ github.action_path }}/notify.sh"
