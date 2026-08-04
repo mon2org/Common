@@ -51,7 +51,7 @@ if [ "$RUNNER_ALLOWED" = "false" ]; then
 fi
 
 if [ "${EVENT_NAME:-}" = "pull_request" ]; then
-  CAN_PUSH=$(gh api "repos/${{ github.repository }}" --jq '.permissions.push' 2>/dev/null || echo "false")
+  CAN_PUSH=$(gh api "repos/${GITHUB_REPOSITORY:-}" --jq '.permissions.push' 2>/dev/null || echo "false")
   if [ "$CAN_PUSH" = "true" ]; then
     echo "⚠️ [SECURITY WARNING] PR イベントですが書き込み権限が検知されました。"
   fi
