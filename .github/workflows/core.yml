@@ -9,7 +9,7 @@ on:
       runner:
         required: false
         type: string
-        default: 'ubuntu-latest-1-vcpu'
+        default: 'ubuntu-slim'
       create-pr:
         required: false
         type: boolean
