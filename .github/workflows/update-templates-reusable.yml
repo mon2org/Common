@@ -58,13 +58,13 @@ jobs:
           fi
           echo "value=$TOKEN" >> $GITHUB_OUTPUT
 
-      # 3. mise のセットアップ (後続の core/checkout-repos 内で mise タスクを叩くため先行実行)
+      # 3. mise のセットアップ (後続の update/checkout-repos 内で mise タスクを叩くため先行実行)
       - name: mise のセットアップ
         uses: ./.github/actions/wrap/mise
 
       # 4. 関連リポジトリの一括取得（自リポジトリ、親テンプレート、Common）
       - name: 関連リポジトリのチェックアウト
-        uses: ./.github/actions/core/checkout-repos
+        uses: ./.github/actions/update/checkout-repos
         with:
           boilerplate-repository: ${{ inputs.boilerplate-repository }}
           common-repository: ${{ inputs.common-repository }}

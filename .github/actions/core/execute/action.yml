@@ -1,0 +1,59 @@
+name: 'Core Execute'
+description: 'セキュリティ検証、環境構築、メイン処理（Command または Action）、PR作成まで'
+
+inputs:
+  run-command:
+    required: false
+    default: ''
+  uses-action:
+    required: false
+    default: ''
+  runner:
+    required: false
+    default: 'ubuntu-latest-1-vcpu'
+  create-pr:
+    required: false
+    default: 'false'
+  pr-branch:
+    required: false
+    default: 'chore/sync-templates'
+  pr-title:
+    required: false
+    default: 'chore: テンプレート・共通設定の自動同期'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Security Guard
+      uses: mon2org/Common/.github/actions/core/guard@main
+      with:
+        run-command: ${{ inputs.run-command }}
+        uses-action: ${{ inputs.uses-action }}
+        runner: ${{ inputs.runner }}
+        create-pr: ${{ inputs.create-pr }}
+
+    - name: Setup mise environment
+      uses: mon2org/Common/.github/actions/wrap/mise@main
+
+    - name: Checkout target repository
+      uses: mon2org/Common/.github/actions/wrap/checkout@main
+
+    # run-command が指定されている場合に実行
+    - name: Run task script
+      if: inputs.run-command != ''
+      shell: bash
+      env:
+        RUN_COMMAND: ${{ inputs.run-command }}
+      run: bash "${{ github.action_path }}/run.sh"
+
+    # uses-action が指定されている場合に実行
+    - name: Run specified custom action
+      if: inputs.uses-action != ''
+      uses: ${{ inputs.uses-action }}
+
+    - name: Create Pull Request if needed
+      if: inputs.create-pr == 'true'
+      uses: mon2org/Common/.github/actions/wrap/create-pull-request@main
+      with:
+        branch: ${{ inputs.pr-branch }}
+        title: ${{ inputs.pr-title }}
