@@ -9,7 +9,7 @@ on:
       runner:
         required: false
         type: string
-        default: 'ubuntu-slim'
+        default: 'ubuntu-latest'
       create-pr:
         required: false
         type: boolean
