@@ -3,7 +3,11 @@ description: 'ワークフロー実行前の権限・パラメータ・トリガ
 
 inputs:
   run-command:
-    required: true
+    required: false
+    default: ''
+  uses-action:
+    required: false
+    default: ''
   runner:
     required: true
   create-pr:
@@ -18,7 +22,7 @@ runs:
         EVENT_NAME: ${{ github.event_name }}
         IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         RUN_COMMAND: ${{ inputs.run-command }}
+        USES_ACTION: ${{ inputs.uses-action }}
         RUNNER: ${{ inputs.runner }}
         CREATE_PR: ${{ inputs.create-pr }}
-        GH_TOKEN: ${{ github.token }}
       run: bash "${{ github.action_path }}/checker.sh"

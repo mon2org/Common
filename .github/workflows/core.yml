@@ -1,0 +1,71 @@
+name: Common Core
+
+on:
+  workflow_call:
+    inputs:
+      run-command:
+        required: true
+        type: string
+      runner:
+        required: false
+        type: string
+        default: 'ubuntu-latest-1-vcpu'
+      create-pr:
+        required: false
+        type: boolean
+        default: false
+      pr-branch:
+        required: false
+        type: string
+        default: 'chore/sync-templates'
+      pr-title:
+        required: false
+        type: string
+        default: 'chore: テンプレート・共通設定の自動同期'
+      timeout-minutes:
+        required: false
+        type: number
+        default: 15
+
+jobs:
+  execute:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - name: Execute core process
+        uses: mon2org/Common/.github/actions/core/execute@main
+        with:
+          run-command: ${{ inputs.run-command }}
+          runner: ${{ inputs.runner }}
+          create-pr: ${{ inputs.create-pr }}
+          pr-branch: ${{ inputs.pr-branch }}
+          pr-title: ${{ inputs.pr-title }}
+
+  execute-fallback:
+    needs: execute
+    if: failure() && inputs.runner == 'ubuntu-latest-1-vcpu'
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - name: Log fallback attempt
+        run: echo "⚠️ 1-vCPU ランナーでの実行に失敗したため、ubuntu-latest (2 vCPU) で再試行します。"
+
+      - name: Execute core process
+        uses: mon2org/Common/.github/actions/core/execute@main
+        with:
+          run-command: ${{ inputs.run-command }}
+          runner: 'ubuntu-latest'
+          create-pr: ${{ inputs.create-pr }}
+          pr-branch: ${{ inputs.pr-branch }}
+          pr-title: ${{ inputs.pr-title }}
+
+  notify-failure:
+    needs: [execute, execute-fallback]
+    if: |
+      always() &&
+      (needs.execute.result == 'failure' || needs.execute.result == 'cancelled') &&
+      (needs.execute-fallback.result == 'failure' || needs.execute-fallback.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure
+        uses: mon2org/Common/.github/actions/core/notify@main

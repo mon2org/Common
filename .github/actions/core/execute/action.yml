@@ -1,9 +1,13 @@
 name: 'Core Execute'
-description: 'セキュリティ検証、環境構築、メイン処理、PR作成まで'
+description: 'セキュリティ検証、環境構築、メイン処理（Command または Action）、PR作成まで'
 
 inputs:
   run-command:
-    required: true
+    required: false
+    default: ''
+  uses-action:
+    required: false
+    default: ''
   runner:
     required: false
     default: 'ubuntu-latest-1-vcpu'
@@ -24,6 +28,7 @@ runs:
       uses: mon2org/Common/.github/actions/core/guard@main
       with:
         run-command: ${{ inputs.run-command }}
+        uses-action: ${{ inputs.uses-action }}
         runner: ${{ inputs.runner }}
         create-pr: ${{ inputs.create-pr }}
 
@@ -33,11 +38,18 @@ runs:
     - name: Checkout target repository
       uses: mon2org/Common/.github/actions/wrap/checkout@main
 
+    # run-command が指定されている場合に実行
     - name: Run task script
+      if: inputs.run-command != ''
       shell: bash
       env:
         RUN_COMMAND: ${{ inputs.run-command }}
       run: bash "${{ github.action_path }}/run.sh"
+
+    # uses-action が指定されている場合に実行
+    - name: Run specified custom action
+      if: inputs.uses-action != ''
+      uses: ${{ inputs.uses-action }}
 
     - name: Create Pull Request if needed
       if: inputs.create-pr == 'true'
