@@ -35,7 +35,7 @@ on:
 
 jobs:
   sync-templates:
-    uses: mon2org/Common/.github/workflows/core.yml@main
+    uses: mon2org/Common/.github/workflows/core.yml
     with:
       # mise タスク経由で同期処理を実行（または uses-action: ./.github/actions/update/sync-templates の指定も可能）
       run-command: mise run sync-templates --boilerplate "${{ inputs.boilerplate-repository }}" --common "${{ inputs.common-repository }}"
