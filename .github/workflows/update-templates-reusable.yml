@@ -35,55 +35,11 @@ on:
 
 jobs:
   sync-templates:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      # 1. ローカル Action / wrap ラッパーを利用するため、まずターゲットリポジトリ本体を取得
-      - name: リポジトリのチェックアウト
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.token || github.token }}
-
-      # 2. トークンの優先順位設定（指定があれば secrets.token、なければ GITHUB_TOKEN）
-      - name: Token の確定
-        id: token
-        shell: bash
-        run: |
-          TOKEN="${{ secrets.token }}"
-          if [ -z "$TOKEN" ]; then
-            TOKEN="${{ github.token }}"
-          fi
-          echo "value=$TOKEN" >> $GITHUB_OUTPUT
-
-      # 3. mise のセットアップ (後続の update/checkout-repos 内で mise タスクを叩くため先行実行)
-      - name: mise のセットアップ
-        uses: ./.github/actions/wrap/mise
-
-      # 4. 関連リポジトリの一括取得（自リポジトリ、親テンプレート、Common）
-      - name: 関連リポジトリのチェックアウト
-        uses: ./.github/actions/update/checkout-repos
-        with:
-          boilerplate-repository: ${{ inputs.boilerplate-repository }}
-          common-repository: ${{ inputs.common-repository }}
-          token: ${{ steps.token.outputs.value }}
-
-      # 5. テンプレートの同期実行（クリーンアップ処理含む）
-      - name: テンプレートの同期
-        uses: ./.github/actions/update/sync-templates
-
-      # 6. 変更差分がある場合に自動で PR を作成
-      - name: プルリクエストの作成
-        uses: ./.github/actions/wrap/create-pull-request
-        with:
-          token: ${{ steps.token.outputs.value }}
-          commit-message: ${{ inputs.pr-commit-message }}
-          title: ${{ inputs.pr-title }}
-          body: |
-            ## 🤖 共通テンプレート自動同期
-
-            親テンプレートおよび Common リポジトリから最新の設定資産を同期しました。
-            変更内容を確認の上、マージを行ってください。
-          branch: ${{ inputs.pr-branch }}
+    uses: mon2org/Common/.github/workflows/core.yml@main
+    with:
+      # mise タスク経由で同期処理を実行（または uses-action: ./.github/actions/update/sync-templates の指定も可能）
+      run-command: mise run sync-templates --boilerplate "${{ inputs.boilerplate-repository }}" --common "${{ inputs.common-repository }}"
+      create-pr: true
+      pr-branch: ${{ inputs.pr-branch }}
+      pr-title: ${{ inputs.pr-title }}
+    secrets: inherit
