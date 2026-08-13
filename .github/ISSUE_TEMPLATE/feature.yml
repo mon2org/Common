@@ -1,0 +1,33 @@
+name: 機能提案・改善
+description: 新機能の追加や既存機能の改善要望用テンプレート。
+title: "feat: "
+labels: ["enhancement"]
+
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 概要・目的
+      description: どんな機能・改善を追加したいか、その目的や背景を記述してください。
+      placeholder: "〇〇の自動化コマンドを追加して、開発時のセットアップ手順を短縮したい。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: 内容・仕様イメージ
+      description: 具体的な挙動や実装方針のイメージがあれば記述してください。
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: 完了条件
+      description: どうなっていればこの機能が完了（運用可能）とみなせるかを記述してください。
+      placeholder: |
+        - [ ] 新規コマンド `mise run xxx` が追加されていること
+        - [ ] README に使い方が追記されていること
+    validations:
+      required: false
