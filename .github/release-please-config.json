@@ -2,7 +2,7 @@
   "packages": {
     "cmd/template": {
       "release-type": "go",
-      "component": "cmd/template"、
+      "component": "cmd/template",
       "tag-separator": "/",
       "include-component-in-tag": true
     }
