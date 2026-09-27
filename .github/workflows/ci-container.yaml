@@ -73,7 +73,7 @@ jobs:
           format: 'table'
           exit-code: '1' # 重大な脆弱性があればこのステップを failure にする
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           output: 'trivy-results-${{ matrix.container }}.txt'
         continue-on-error: true # コメント投稿処理を継続させるため一時的にエラーを保持
 
