@@ -1,10 +1,9 @@
 {
-  "include-component-in-tag": true,
-  "tag-separator": "/",
+  "tag-separator": ".",
   "packages": {
     "container/base": {
       "release-type": "simple",
-      "package-name": "container/base",
+      "package-name": "container-base",
       "changelog-path": "container/base/CHANGELOG.md",
       "bump-minor-pre-major": true
     }
