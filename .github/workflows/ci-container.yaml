@@ -7,10 +7,12 @@ on:
     paths:
       - "container/**"
       - ".github/workflows/ci-container.yaml"
+      - "!**/*.md"
   pull_request:
     paths:
       - "container/**"
       - ".github/workflows/ci-container.yaml"
+      - "!**/*.md"
 
 jobs:
   # 1. container/ 配下のディレクトリを自動検知してマトリックスを生成するジョブ
