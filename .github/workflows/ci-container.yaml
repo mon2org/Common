@@ -1,0 +1,108 @@
+name: CI(Container)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "container/**"
+      - ".github/workflows/ci-container.yaml"
+  pull_request:
+    paths:
+      - "container/**"
+      - ".github/workflows/ci-container.yaml"
+
+jobs:
+  # 1. container/ 配下のディレクトリを自動検知してマトリックスを生成するジョブ
+  detect:
+    name: コンテナの自動検知
+    runs-on: ubuntu-latest
+    outputs:
+      containers: ${{ steps.set-matrix.outputs.containers }}
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+
+      - name: ディレクトリの走査とJSON生成
+        id: set-matrix
+        run: |
+          CONTAINERS=$(find container -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          echo "検出されたコンテナ: $CONTAINERS"
+          echo "containers=$CONTAINERS" >> $GITHUB_OUTPUT
+
+  # 2. 自動検知されたコンテナごとに並列で構文解析・ビルド・スキャンを実行するジョブ
+  ci:
+    name: 構文解析・ビルド・脆弱性スキャン (${{ matrix.container }})
+    needs: detect
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container: ${{ fromJson(needs.detect.outputs.containers) }}
+    permissions:
+      contents: read
+      pull-requests: write # reviewdog やコメント投稿に必要
+
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+
+      # 修正点: dockerfile インプットの代わりに include を使用
+      - name: hadolint による Dockerfile の静的解析
+        uses: reviewdog/action-hadolint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          include: "container/${{ matrix.container }}/Dockerfile"
+          reporter: github-pr-review # プルリクエストの該当行にインラインコメントを投稿
+          level: error
+
+      - name: Docker Buildx のセットアップ
+        uses: docker/setup-buildx-action@v3
+
+      # 修正点: コンテキストやファイルパスのワイルドカード（**）を具体的な変数に修正
+      - name: Docker イメージのビルド
+        uses: docker/build-push-action@v5
+        with:
+          context: ./container/${{ matrix.container }}
+          file: ./container/${{ matrix.container }}/Dockerfile
+          load: true # ローカルのDocker環境にイメージを読み込ませる
+          tags: ${{ matrix.container }}-image:test
+
+      - name: Trivy による脆弱性スキャン
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          image-ref: '${{ matrix.container }}-image:test'
+          format: 'table'
+          exit-code: '1' # 重大な脆弱性（CRITICALなど）が見つかった場合にCIを失敗させる
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-results-${{ matrix.container }}.txt' # 結果をテキストファイルに出力
+        continue-on-error: true # スキャン結果を一度ファイルにまとめてPRコメントに投稿するため、ここではエラーを一旦保持
+
+      - name: Trivy 結果の整形
+        if: always()
+        run: |
+          echo "## 🛡️ コンテナ脆弱性スキャン結果: \`${{ matrix.container }}\`" > trivy-comment-${{ matrix.container }}.md
+          echo "" >> trivy-comment-${{ matrix.container }}.md
+          if [ -s trivy-results-${{ matrix.container }}.txt ]; then
+            echo "以下の重大な脆弱性（CRITICAL, HIGH）が検出されました。" >> trivy-comment-${{ matrix.container }}.md
+            echo "\`\`\`" >> trivy-comment-${{ matrix.container }}.md
+            cat trivy-results-${{ matrix.container }}.txt >> trivy-comment-${{ matrix.container }}.md
+            echo "\`\`\`" >> trivy-comment-${{ matrix.container }}.md
+          else
+            echo "✅ 検出された重大な脆弱性はありませんでした。" >> trivy-comment-${{ matrix.container }}.md
+          fi
+
+      - name: PR へのコメント集約（Sticky Comment）
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: trivy-comment-${{ matrix.container }}.md
+          header: trivy-report-${{ matrix.container }} # コンテナごとにコメント枠を分ける
+
+      - name: 脆弱性チェックの判定
+        if: always()
+        run: |
+          if [ -f trivy-results-${{ matrix.container }}.txt ] && [ -s trivy-results-${{ matrix.container }}.txt ]; then
+            echo "❌ [${{ matrix.container }}] 重大な脆弱性が検出されたため、CIを失敗させます。"
+            exit 1
+          fi
