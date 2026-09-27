@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'container-*.v*'
+  workflow_dispatch:
 
 jobs:
   # 1. container直下でDockerfileを含むサブディレクトリを動的に検出する
