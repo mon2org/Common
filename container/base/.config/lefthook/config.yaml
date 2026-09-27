@@ -1,0 +1,39 @@
+# LEFTHOOK_CONFIG で指定する設定ファイル例
+# 配置場所の例: container/base/.config/lefthook.yaml
+
+min_version: "1.5.0"
+
+# ==========================================
+# 1. コミット前 (pre-commit)
+# ==========================================
+pre-commit:
+  parallel: true # 複数のチェックを並列実行して高速化
+  commands:
+    hadolint:
+      glob: "**/Dockerfile"
+      run: |
+        echo "Running hadolint on staged Dockerfiles..."
+
+    # ② 設定ファイルやIaCのセキュリティスキャン (Trivy Config)
+    trivy-config:
+      glob: "{Dockerfile,**/Dockerfile,*.yaml,*.yml}"
+      run: |
+        echo "Running Trivy security config scan..."
+
+    # ③ Markdown の品質チェック・フォーマット (オプション)
+    markdown-lint:
+      glob: "**/*.md"
+      run: |
+        # 例: 変更されたMarkdownの構文チェック等
+        echo "Checking markdown files: {staged_files}"
+
+# ==========================================
+# 2. プッシュ前 (pre-push)
+# ==========================================
+pre-push:
+  commands:
+    
+    # ④ コンテナのビルドテスト（主要な変更がある場合のみなど）
+    container-build-check:
+      run: |
+        echo "Verifying container build context..."

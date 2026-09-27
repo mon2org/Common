@@ -1,0 +1,6 @@
+[env]
+LEFTHOOK_CONFIG = "{{config_root}}/.config/lefthook/config.yaml"
+
+[tools]
+lefthook = "2.1.14"
+usage = "6.11.1"

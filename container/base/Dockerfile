@@ -24,7 +24,7 @@ RUN MISE_VERSION=${MISE_VERSION} curl https://mise.run | sh
 
 # 3. ホスト側の config ディレクトリが存在する場合に .config へコピー
 # ※ config ディレクトリが空（.gitkeepのみ等）の場合は中身がコピーされないため安全です
-COPY config/ ${XDG_CONFIG_HOME}/
+COPY .config/ ${XDG_CONFIG_HOME}/
 
 # 4. bash と zsh の両方で mise が有効化されるように設定
 RUN echo 'eval "$(mise activate bash)"' >> "${HOME}/.bashrc" \
