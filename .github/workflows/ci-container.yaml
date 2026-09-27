@@ -46,37 +46,37 @@ jobs:
       - name: リポジトリのチェックアウト
         uses: actions/checkout@v4
 
-      # 修正点: dockerfile インプットの代わりに include を使用
       - name: hadolint による Dockerfile の静的解析
         uses: reviewdog/action-hadolint@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           include: "container/${{ matrix.container }}/Dockerfile"
-          reporter: github-pr-review # プルリクエストの該当行にインラインコメントを投稿
+          reporter: github-pr-review
           level: error
 
       - name: Docker Buildx のセットアップ
         uses: docker/setup-buildx-action@v3
 
-      # 修正点: コンテキストやファイルパスのワイルドカード（**）を具体的な変数に修正
       - name: Docker イメージのビルド
         uses: docker/build-push-action@v5
         with:
           context: ./container/${{ matrix.container }}
           file: ./container/${{ matrix.container }}/Dockerfile
-          load: true # ローカルのDocker環境にイメージを読み込ませる
+          load: true
           tags: ${{ matrix.container }}-image:test
 
+      # 修正: id付与と、outcomeによる判定を行えるように調整
       - name: Trivy による脆弱性スキャン
         uses: aquasecurity/trivy-action@v0.35.0
+        id: trivy # ステップを参照するためのID
         with:
           image-ref: '${{ matrix.container }}-image:test'
           format: 'table'
-          exit-code: '1' # 重大な脆弱性（CRITICALなど）が見つかった場合にCIを失敗させる
+          exit-code: '1' # 脆弱性があればこのステップを失敗（failure）させる
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          output: 'trivy-results-${{ matrix.container }}.txt' # 結果をテキストファイルに出力
-        continue-on-error: true # スキャン結果を一度ファイルにまとめてPRコメントに投稿するため、ここではエラーを一旦保持
+          output: 'trivy-results-${{ matrix.container }}.txt'
+        continue-on-error: true # エラーでも後続のコメント処理を走らせるために一時的に継続
 
       - name: Trivy 結果の整形
         if: always()
@@ -84,12 +84,12 @@ jobs:
           echo "## 🛡️ コンテナ脆弱性スキャン結果: \`${{ matrix.container }}\`" > trivy-comment-${{ matrix.container }}.md
           echo "" >> trivy-comment-${{ matrix.container }}.md
           if [ -s trivy-results-${{ matrix.container }}.txt ]; then
-            echo "以下の重大な脆弱性（CRITICAL, HIGH）が検出されました。" >> trivy-comment-${{ matrix.container }}.md
+            echo "以下のスキャン結果が検出されました。" >> trivy-comment-${{ matrix.container }}.md
             echo "\`\`\`" >> trivy-comment-${{ matrix.container }}.md
             cat trivy-results-${{ matrix.container }}.txt >> trivy-comment-${{ matrix.container }}.md
             echo "\`\`\`" >> trivy-comment-${{ matrix.container }}.md
           else
-            echo "✅ 検出された重大な脆弱性はありませんでした。" >> trivy-comment-${{ matrix.container }}.md
+            echo "✅ スキャン結果ファイルが空です。" >> trivy-comment-${{ matrix.container }}.md
           fi
 
       - name: PR へのコメント集約（Sticky Comment）
@@ -97,12 +97,15 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: trivy-comment-${{ matrix.container }}.md
-          header: trivy-report-${{ matrix.container }} # コンテナごとにコメント枠を分ける
+          header: trivy-report-${{ matrix.container }}
 
+      # 修正: ファイルサイズではなく、Trivyステップの実行結果(outcome)で判定
       - name: 脆弱性チェックの判定
         if: always()
         run: |
-          if [ -f trivy-results-${{ matrix.container }}.txt ] && [ -s trivy-results-${{ matrix.container }}.txt ]; then
+          if [ "${{ steps.trivy.outcome }}" == "failure" ]; then
             echo "❌ [${{ matrix.container }}] 重大な脆弱性が検出されたため、CIを失敗させます。"
             exit 1
+          else
+            echo "✅ [${{ matrix.container }}] 重大な脆弱性は検出されませんでした。"
           fi
