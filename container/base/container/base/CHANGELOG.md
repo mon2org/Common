@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/mon2org/Common/compare/container-base.v0.1.1...container-base.v0.1.2) (2026-09-27)
+
+
+### Bug Fixes
+
+* 発火条件の調整 [#18](https://github.com/mon2org/Common/issues/18) ([#22](https://github.com/mon2org/Common/issues/22)) ([8490f74](https://github.com/mon2org/Common/commit/8490f74d1d19f352e7b7b4f4d4cb4a81d4b3b128))
+
 ## [0.1.1](https://github.com/mon2org/Common/compare/container-base.v0.1.0...container-base.v0.1.1) (2026-09-27)
 
 
