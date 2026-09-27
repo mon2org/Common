@@ -5,7 +5,8 @@
     "container/base": {
       "release-type": "simple",
       "package-name": "container/base",
-      "changelog-path": "container/base/CHANGELOG.md"
+      "changelog-path": "container/base/CHANGELOG.md",
+      "bump-minor-pre-major": true
     }
   }
 }
