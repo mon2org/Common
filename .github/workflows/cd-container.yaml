@@ -3,7 +3,7 @@ name: Build and Push Containers
 on:
   push:
     tags:
-      - 'container-*-v*' # 例: container-base-v0.1.0, container-other-v1.0.0 など
+      - 'container-*.v*'
 
 jobs:
   # 1. container直下でDockerfileを含むサブディレクトリを動的に検出する
