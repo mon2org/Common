@@ -65,18 +65,17 @@ jobs:
           load: true
           tags: ${{ matrix.container }}-image:test
 
-      # 修正: id付与と、outcomeによる判定を行えるように調整
       - name: Trivy による脆弱性スキャン
         uses: aquasecurity/trivy-action@v0.35.0
-        id: trivy # ステップを参照するためのID
+        id: trivy # ステップを参照するためのIDを付与
         with:
           image-ref: '${{ matrix.container }}-image:test'
           format: 'table'
-          exit-code: '1' # 脆弱性があればこのステップを失敗（failure）させる
+          exit-code: '1' # 重大な脆弱性があればこのステップを failure にする
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
           output: 'trivy-results-${{ matrix.container }}.txt'
-        continue-on-error: true # エラーでも後続のコメント処理を走らせるために一時的に継続
+        continue-on-error: true # コメント投稿処理を継続させるため一時的にエラーを保持
 
       - name: Trivy 結果の整形
         if: always()
@@ -99,7 +98,6 @@ jobs:
           path: trivy-comment-${{ matrix.container }}.md
           header: trivy-report-${{ matrix.container }}
 
-      # 修正: ファイルサイズではなく、Trivyステップの実行結果(outcome)で判定
       - name: 脆弱性チェックの判定
         if: always()
         run: |
