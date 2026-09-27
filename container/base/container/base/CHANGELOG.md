@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/mon2org/Common/compare/container-base.v0.1.0...container-base.v0.1.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* CDテスト [#18](https://github.com/mon2org/Common/issues/18) ([#19](https://github.com/mon2org/Common/issues/19)) ([13ba809](https://github.com/mon2org/Common/commit/13ba8098f6b50caa72c621d1dfbd3a7b0f699171))
+
 ## [0.1.0](https://github.com/mon2org/Common/compare/container-base.v0.1.0...container-base.v0.1.0) (2026-09-27)
 
 
